@@ -1,0 +1,115 @@
+---
+title: "p1"
+author: "Angel Gallardo"
+date: "2024-02-17"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+
+
+data <- readLines("https://raw.githubusercontent.com/Angelogallardo05/Project1-607/main/tournamentinfo.txt")
+
+print(data)
+
+# Initialize empty vectors to store data
+player_number <- numeric()
+player_name <- character()
+player_state <- character()
+total_points <- numeric()
+player_pre_rating <- numeric()
+Average_pre_rating <- numeric()
+R1 <- numeric()
+R2 <- numeric()
+R3 <- numeric()
+R4 <- numeric()
+R5 <- numeric()
+R6 <- numeric()
+R7 <- numeric()
+
+
+
+
+# Loop through each line of the file
+for (i in seq_along(data)) {
+  # Extract relevant information using regular expressions
+  if (grepl("^\\s*\\d+\\s*\\|.*$", data[i])) {
+    info <- strsplit(data[i], "\\s*\\|\\s*")[[1]]
+    player_number <- c(player_number,as.numeric(gsub("[A-Za-z]", "", info[1])))
+    player_name <- c(player_name, info[2])
+    # Extract state information using the provided pattern
+    player_state <- c(player_state, regmatches(data[i + 1], regexpr("[[:upper:]]{2}(?=\\s\\|)", data[i + 1], perl = TRUE)))
+    total_points <- c(total_points, as.numeric(info[3]))
+    R1 <- c(R1, as.numeric(gsub("[A-Za-z]", "", info[4])))
+    R2 <- c(R2, as.numeric(gsub("[A-Za-z]", "", info[5])))
+    R3 <- c(R3, as.numeric(gsub("[A-Za-z]", "", info[6])))
+    R4 <- c(R4, as.numeric(gsub("[A-Za-z]", "", info[7])))
+    R5 <- c(R5, as.numeric(gsub("[A-Za-z]", "", info[8])))
+    R6 <- c(R6, as.numeric(gsub("[A-Za-z]", "", info[9])))
+    R7 <- c(R7, as.numeric(gsub("[A-Za-z]", "", info[10])))
+    
+# Extract pre-rating from the line below
+    next_line_info <- strsplit(data[i + 1], "\\s+")[[1]]
+    player_pre_rating <- c(player_pre_rating, as.numeric(sub(".*R:\\s{1,2}(\\d{3,4}).*", "\\1", paste(next_line_info, collapse = " "))))
+    
+  
+print(player_number)    
+     
+  }
+}
+
+
+# Replace R1 to R7 with player_pre_rating
+R1 <- player_pre_rating[match(R1, player_number)]
+R2 <- player_pre_rating[match(R2, player_number)]
+R3 <- player_pre_rating[match(R3, player_number)]
+R4 <- player_pre_rating[match(R4, player_number)]
+R5 <- player_pre_rating[match(R5, player_number)]
+R6 <- player_pre_rating[match(R6, player_number)]
+R7 <- player_pre_rating[match(R7, player_number)]
+
+
+# Calculate the mean for columns R1 to R7, excluding NA values
+Average_pre_rating <- round(rowMeans(data.frame(R1, R2, R3, R4, R5, R6, R7), na.rm = TRUE))
+
+
+
+
+# Create a data frame from the extracted information
+df <- data.frame(
+  Player_Number = player_number,
+  Player_Name = player_name,
+  Player_State = player_state,
+  Total_Points = total_points,
+  Player_Pre_Rating = player_pre_rating,
+  Average_pre_rating,
+  R1 = R1,
+  R2 = R2,
+  R3 = R3,
+  R4 = R4,
+  R5 = R5,
+  R6 = R6,
+  R7 = R7
+)
+
+
+# Print the data frame
+print(df)
+
+# Print the specified columns of the data frame
+print(df[c("Player_Number", "Player_Name", "Player_State", "Total_Points", "Player_Pre_Rating", "Average_pre_rating")])
+
+
+# Specify the columns you want to export
+columns_to_export <- c("Player_Number", "Player_Name", "Player_State", "Total_Points", "Player_Pre_Rating", "Average_pre_rating")
+
+# Subset the data frame with the specified columns
+subset_df <- df[columns_to_export]
+
+# Export the subsetted data frame as a CSV file
+write.csv(subset_df, file = "Tournament_data_AG.csv", row.names = FALSE)
+
+```
+
